@@ -33,15 +33,17 @@ def download_dataset(args):
                         download_dir = os.path.join(args.output_dir, cat_dir)
                         os.makedirs(download_dir, exist_ok=True)
                         response = requests.get(image_url)
-                        if response.status_code == 200:
-                            with open(os.path.join(download_dir, filename), 'wb') as img_file:
-                                img_file.write(response.content)
-                            print(f'Saved to {download_dir}{filename}')
-                            os.remove(j_dir)
+                        if len(os.listdir(download_dir)) <= 3000:
+                            if response.status_code == 200:
+                                with open(os.path.join(download_dir, filename), 'wb') as img_file:
+                                    img_file.write(response.content)
+                                print(f'Saved to {download_dir}{filename}')
+                            else:
+                                print(f'Failed to download image')
+                            if args.verbose:
+                                print(f"Downloading: {nft_name}")
                         else:
-                            print(f'Failed to download image')
-                        if args.verbose:
-                            print(f"Downloading: {nft_name}")
+                            break
                         
 
 
