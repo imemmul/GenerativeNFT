@@ -2,15 +2,20 @@ import torch
 import torchvision.transforms as transforms
 import os
 import matplotlib.pyplot as plt
-
+#import subprocess
 
 from torch.utils.data import DataLoader
-from data.custom_dataset import CustomDataset  
-from util.visualizer import Visualizer
 
+print(torch.__version__)
+device = "mps" if torch.backends.mps.is_available() else "cpu"
+print(device)
 
-train_dir = '/Users/beyzakaya/Desktop/Beyza Kaya /Akademik/Senior Design Project/GenerativeNFT/dataset/train'
-test_dir = '/Users/beyzakaya/Desktop/Beyza Kaya /Akademik/Senior Design Project/GenerativeNFT/dataset/test'
+train_dir = '/Users/beyzakaya/Desktop/Beyza Kaya /Akademik/Senior Design Project/GenerativeNFT/dataset/NFTs/train'
+test_dir = '/Users/beyzakaya/Desktop/Beyza Kaya /Akademik/Senior Design Project/GenerativeNFT/dataset/NFTs/test'
+
+#environment_file = "/Users/beyzakaya/Desktop/Beyza Kaya /Akademik/Senior Design Project/GenerativeNFT/pytorch-CycleGAN-and-pix2pix/environment.yml"
+#activate_environment_command = "conda activate /Users/beyzakaya/pytorch-test/env"
+#subprocess.run(activate_environment_command, shell=True, check=True)
 
 # transform = transforms.Compose([
 #     transforms.Resize((256,256)),
@@ -52,7 +57,7 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         img_name = os.path.join(self.root_dir, self.data[idx])
-        image = Image.open(img_name)
+        image = Image.open(img_name).convert('RGB')
         print(f'number of color channels: {image.mode}')
 
         if self.transform:
@@ -97,35 +102,7 @@ for idx, batch in enumerate(train_loader):
     plt.show()
 
 
-model = Pix2PixModel()
-visualizer = Visualizer()
-num_epochs = 50
 
-for epoch in range(num_epochs):
-    for idx, batch in enumerate(train_loader):
-        model.set_input(batch)
-        model.optimize_parameters()
-
-    
-    if epoch % 10 == 0:  
-        visuals = model.get_current_visuals()
-        visualizer.display_current_results(visuals, epoch, idx)
-
-model.save_networks('trained_model')
-
-for batch in train_loader:
-    with torch.no_grad():
-        model.set_input(batch)
-        model.forward()
-        output = model.get_current_visuals()  
-
-    # Display the generated images
-    grid = output['fake_B']  
-    plt.figure(figsize=(8, 8))
-    plt.imshow(grid.permute(1, 2, 0))
-    plt.axis('off')
-    plt.show()
-    break
 
 
 
