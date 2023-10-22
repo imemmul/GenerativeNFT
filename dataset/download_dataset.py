@@ -17,13 +17,34 @@ def load_json(json_dir):
         print(f"Error: {e}")
     finally:
         return data
+    
+def download_text(args):
+    if args.sync_dataset:
+        assert args.images_dir is not None, "images_dir is required"
+        for cat_dir in os.listdir(args.images_dir):
+            cat_folder = os.path.join(args.images_dir, cat_dir)
+            for img_name in os.listdir(cat_folder):
+                json_name = img_name[:-3] + "json"
+                json_dir = os.path.join(args.json_dir, cat_dir, json_name)
+                data = load_json(json_dir)
+                if data:
+                    text_info = data[0]["mintObject"]["attributes"]
+                    os.makedirs(os.path.join(args.output_dir, cat_dir), exist_ok=True)
+                    output_json_dir = os.path.join(args.output_dir, cat_dir, json_name)
+                    if args.verbose:
+                        print(f"Downloading: {img_name} with attributes to {output_json_dir}")
+                    data = {"data": text_info}
+                    with open(output_json_dir, "w") as json_file:
+                        json.dump(data, json_file, indent=4)
+
+
 def download_dataset(args):
     """
     downloading dataset
-    """
+    """           
     for cat_dir in os.listdir(args.json_dir):
         cat_nft = os.path.join(args.json_dir, cat_dir)
-        if cat_dir == "Portals" or cat_dir == "Genesis Genopet":
+        if cat_dir == "Portals" or cat_dir == "Genesis Genopet" or cat_dir == ".DS_Store":
             pass
         else:
             amount = 0
@@ -37,9 +58,10 @@ def download_dataset(args):
                 if data:
                     nft_name = data[0]["mintObject"]["title"]
                     image_url = data[0]["mintObject"]["img"]
+                    text_info = data[0]["mintObject"]["attributes"]
                     if args.verbose:
                         print(f"Downloading: {nft_name} with {image_url}")
-                    if args.download:
+                    if args.download_images:
                         filename = j[:-4] + 'png'
                         download_dir = os.path.join(args.output_dir, cat_dir)
                         os.makedirs(download_dir, exist_ok=True)
@@ -58,6 +80,8 @@ def download_dataset(args):
                                     print(f'Failed to download image')
                         else:
                             pass
+                    else:
+                        print(f"Nothing Happened")
                         
 
 
@@ -65,8 +89,11 @@ def parseargs():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--json-dir", help="Json dataaset directory")
     parser.add_argument("--output-dir", help="Download directory")
+    parser.add_argument("--images-dir", help="images_dir which prequisite for sync process")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose mode")
-    parser.add_argument("--download", action="store_true", help="test or download")
+    parser.add_argument("--download-images", action="store_true", help="test or download images")
+    parser.add_argument("--download-text", action="store_true", help="test or download texts")
+    parser.add_argument("--sync-dataset", action="store_true", help="syncing images and text files")
     args = parser.parse_args()
     if args.verbose:
             print("Verbose mode is enabled")
@@ -74,7 +101,10 @@ def parseargs():
         
 def main():
     args = parseargs()
-    download_dataset(args)
+    if args.download_images:
+        download_dataset(args)
+    elif args.download_text:
+        download_text(args)
 
 if __name__ == "__main__":
     main()
