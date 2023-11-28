@@ -1,4 +1,4 @@
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline, DiffusionPipeline
 import torch
 import pandas as pd
 import numpy as np
@@ -33,11 +33,11 @@ def dummy(images, **kwargs):
     return images, [False]
 dataset_dir = "/home/emir/Desktop/dev/datasets/nft_dataset/NFT_IMAGES"
 model_path = "/home/emir/Desktop/dev/grad_weights/sd_nft/checkpoint-33500"
-model_path_v2 = "/home/emir/Desktop/dev/grad_weights/sd_nft/checkpoint-15000"
+model_path_v2 = "/home/emir/Desktop/dev/grad_weights/sd_nft_without_lora/checkpoint-2000/"
 pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16)
 pipe_2 = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16)
-pipe.unet.load_attn_procs(model_path)
 pipe_2.unet.load_attn_procs(model_path_v2)
+pipe.unet.load_attn_procs(model_path)
 pipe.safety_checker = dummy
 pipe_2.safety_checker = dummy
 pipe.to("cuda")
@@ -47,28 +47,27 @@ prompts = []
 real_imgs = []
 fake_images = []
 fake_images_2 = []
-for _ in range(100):
+
+
+for _ in range(10):
     rand_int = np.random.randint(len(df['text']))
     prompt = str(df['text'][rand_int])
     img_path = os.path.join(dataset_dir, df['file_name'][rand_int])
     img = Image.open(fp=img_path).convert('RGB')
     img.save(f"./output/sample_{_}_real.png")
     img = np.array(img)
-    print(f"img: {img.shape}")
     real_imgs.append(preprocess_image(img))
-    print(f"img_path: {img_path}, prompt: {prompt}")
     cleaned_prompt = prompt.split(',')
-    print(f"creating image for: {cleaned_prompt}")
     random.shuffle(cleaned_prompt)
     elements_to_drop = 3
 
     result = cleaned_prompt[elements_to_drop:]
     result_string = ' '.join(result)
+    print(f"creating image for: {result_string}")
     
-    prompts.append(prompt)
     print(result_string)
-    predicted_ = pipe(prompt, num_inference_steps=50, guidance_scale=7.5).images
-    predicted_2 = pipe_2(prompt, num_inference_steps=50, guidance_scale=7.5).images
+    predicted_ = pipe(result_string, num_inference_steps=50, guidance_scale=7.5).images
+    predicted_2 = pipe_2(result_string, num_inference_steps=50, guidance_scale=7.5).images
     fake_image = predicted_[0]
     fake_image_2 = predicted_2[0]
     fake_images.append(preprocess_image(np.array(fake_image)))
