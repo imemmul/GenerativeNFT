@@ -1083,7 +1083,6 @@ def main():
     unet = UNet2DConditionModel.from_pretrained(
         args.sft_path, subfolder="unet", revision=args.non_ema_revision
     )
-
   pipe.scheduler = DDIMSchedulerExtended.from_config(pipe.scheduler.config)
   vae = pipe.vae
   unet.requires_grad_(False)
@@ -1238,7 +1237,7 @@ def main():
       yield batch
 
   data_iterator = _my_data_iterator(prompt_list, batch_size=args.g_batch_size)
-  data_iterator = accelerator.prepare(data_iterator)
+  data_iterator = accelerator.prepare(data_iterator) # gives error of AttributeError: 'generator' object has no attribute '_is_accelerate_prepared'
 
   lr_scheduler = get_scheduler(
       args.lr_scheduler,
