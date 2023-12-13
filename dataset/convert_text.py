@@ -15,9 +15,17 @@ def check_null(data:dict):
     else:
         print(f"empty data")
 
+def nft_class_handler(nft_class):
+    words = nft_class.split('_')
+    capitalized_words = [word.capitalize() for word in words]
+    result = ' '.join(capitalized_words)
+    print(result)  # Output: Blocksmith Labs
+    return result
+
 def handler(nft_class:str, data:dict, img_dir:str, args):
     data["data"] = check_null(data=data)
     txt = ""
+    txt += f"{nft_class_handler(nft_class=nft_class)} Collection, "
     if nft_class == "degenerate_ape_academy":
         for element in data["data"][::-1]:
             if len(element['trait_type'].split('/')) > 1:
@@ -64,7 +72,7 @@ def handler(nft_class:str, data:dict, img_dir:str, args):
     if args.verbose:
         print(f"{nft_class}: {txt[:-2]}\n")
     txt = txt[:-2]
-    return [{"file_name": img_dir, "text": txt}]
+    return [{"file_name": f"/train/{img_dir}", "text": txt}]
 
 def convert_text_2_iamge_csv(args):
     """
@@ -82,7 +90,7 @@ def convert_text_2_iamge_csv(args):
             row = handler(nft_class=nft_class, data=data, img_dir=img_dir, args=args)
             new_df = pd.DataFrame(row)
             df = pd.concat([df, new_df], ignore_index=True)
-    df.to_csv("/home/emir/Desktop/dev/datasets/nft_dataset/metadata.csv", index=False)
+    df.to_csv("/home/emir/Desktop/dev/datasets/nft_dataset/metadata_collection.csv", index=False)
         
 
 
