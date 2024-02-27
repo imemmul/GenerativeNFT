@@ -55,6 +55,8 @@ def get_rarity(download_dir):
                             else:
                                 print("None img url")
                         else:
+                            label = data[col_name][id]['rarity']
+                            csv_contents.append({'data_name': data_name, 'label':label})
                             print("already")
                 elif len(data[col_name]) > 1500:
                     for id in range(len(data[col_name][:1500])):
@@ -78,7 +80,9 @@ def get_rarity(download_dir):
                             else:
                                 print("None img url")
                         else:
+                            label = data[col_name][id]['rarity']
                             print("already")
+                            csv_contents.append({'data_name': data_name, 'label':label})
                 
     fields = ['data_name', 'label']
     csv_file_path = '/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/rarity_dataset/labels.csv'
