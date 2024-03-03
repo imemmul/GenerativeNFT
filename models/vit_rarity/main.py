@@ -56,6 +56,7 @@ class RarityDataset(Dataset):
         self.labels['dict'] = self.labels['label'].apply(convert_to_dict)
         self.labels['rank_values'] = self.labels["dict"].apply(extract_rank)
         self.col_max_rarity = self.calculate_rarity()
+        self.col_name = None
         self.drop_nan_ones()
         self.image_dir = image_dir
 
@@ -82,13 +83,16 @@ class RarityDataset(Dataset):
             max_col_rarities[col] = filtered_df["rank_values"].max()
         return max_col_rarities
 
+    def get_col_labels(self, col_name):
+        return self.labels[self.labels['data_name'].str.startswith(col_name)].index
+    
     def __getitem__(self, index):
-        col_name = self.labels['data_name'][index].split("_")[0] # bu olabilir
+        self.col_name = self.labels['data_name'][index].split("_")[0] # bu olabilir
         img_dir = os.path.join(self.image_dir, self.labels['data_name'][index])
         img = np.array(Image.open(img_dir).convert('RGB'))
-        if transform:
-            img = transform(img)
-        return img, self.labels['rank_values'][index] / self.col_max_rarity[col_name]
+        if self.transform:
+            img = self.transform(img)
+        return img, self.labels['rank_values'][index] / self.col_max_rarity[self.col_name]
     
 rarity_dataset = RarityDataset(labels_dir, valid_list, "/home/emir/Desktop/dev/datasets/nft_rarity_dataset/rarity_dataset", transform=transform)
 
@@ -121,7 +125,6 @@ def val(model, test_loader, device):
       avg_loss += loss.item()
       print(f"validating: loss{loss.item()}")
   return avg_loss / len(test_loader)
-
 num_epochs = 20
 for epoch in range(num_epochs):
     model.train()
