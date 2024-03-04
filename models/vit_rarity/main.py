@@ -35,7 +35,7 @@ valid_list = ["azuki",
 "pixelmongen1",
 "kanpai-pandas"]
 
-labels_dir = "/home/emir/Desktop/dev/datasets/nft_rarity_dataset/rarity_dataset/labels.csv"
+labels_dir = "/home/emir/Desktop/dev/datasets/nft_rarity_dataset/labels_augmented.csv"
 
 def extract_rank(row):
     return row['rank'] if row and 'rank' in row else None
@@ -57,7 +57,7 @@ class RarityDataset(Dataset):
         self.labels['rank_values'] = self.labels["dict"].apply(extract_rank)
         self.col_max_rarity = self.calculate_rarity()
         self.col_name = None
-        self.drop_nan_ones()
+        # self.drop_nan_ones()
         self.image_dir = image_dir
 
     def drop_nan_ones(self):
@@ -92,10 +92,10 @@ class RarityDataset(Dataset):
         img = np.array(Image.open(img_dir).convert('RGB'))
         if self.transform:
             img = self.transform(img)
-        return img, self.labels['rank_values'][index] / self.col_max_rarity[self.col_name]
+        return img, self.labels['cls'][index]
     
-rarity_dataset = RarityDataset(labels_dir, valid_list, "/home/emir/Desktop/dev/datasets/nft_rarity_dataset/rarity_dataset", transform=transform)
-
+rarity_dataset = RarityDataset(labels_dir, valid_list, "/home/emir/Desktop/dev/datasets/nft_rarity_dataset/rarity_dataset_augmented/rarity_dataset_augmented/", transform=transform)
+print(len(rarity_dataset.labels))
 train_size = int(0.8 * len(rarity_dataset))
 test_size = len(rarity_dataset) - train_size
 
@@ -103,28 +103,31 @@ train_dataset, test_dataset = random_split(rarity_dataset, [train_size, test_siz
 
 print("Training set size:", len(train_dataset))
 print("Testing set size:", len(test_dataset))
-
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=8, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=8, shuffle=False)
 
 model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224-in21k')
 model.classifier = nn.Linear(model.config.hidden_size, 1)
-optimizer = optim.SGD(model.parameters(), lr=1e-3)
-criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=1e-4)
+criterion = nn.BCELoss()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
-def val(model, test_loader, device):
-  model.eval()
-  avg_loss = 0
-  with torch.no_grad():
-    for img, label in test_loader:
-      img, label = img.to(device), label.to(device)
-      outputs = model(img)
-      loss = criterion(outputs.logits.to(torch.float64).squeeze(), label)
-      avg_loss += loss.item()
-      print(f"validating: loss{loss.item()}")
-  return avg_loss / len(test_loader)
+def val(model, test_loader, device, criterion):
+    model.eval()
+    avg_loss = 0
+    with torch.no_grad():
+        for i, batch in enumerate(test_loader):
+            img, labels = batch
+            img, labels = img.to(device), labels.to(device)
+            outputs = model(img)
+            labels = labels.unsqueeze(1).to(outputs.logits.dtype)
+            probs = torch.sigmoid(outputs.logits)
+            loss = criterion(probs, labels)
+            avg_loss += loss.item()
+            print(f"{i} iteration, Validating: loss {loss.item()}")
+    return avg_loss / len(test_loader)
+
 num_epochs = 20
 for epoch in range(num_epochs):
     model.train()
@@ -132,16 +135,20 @@ for epoch in range(num_epochs):
     for i, batch in enumerate(train_loader):
         images, labels = batch
         images, labels = images.to(device), labels.to(device)
+        
         optimizer.zero_grad()
         outputs = model(images)
-        # print(outputs)
-        # print(labels)
-        loss = criterion(outputs.logits.to(torch.float64).squeeze(), labels)
+        labels = labels.unsqueeze(1).to(outputs.logits.dtype)
+
+        probs = torch.sigmoid(outputs.logits)
+        # print(f"probs: {probs}, shape: {probs.shape}")
+        # print(f"labels: {labels}, shape: {labels.shape}")
+        loss = criterion(probs, labels)
         loss.backward()
         optimizer.step()
         print(f"iteration {i}, loss: {loss.item()}")
         train_loss += loss.item()
-    val_loss = val(model, test_loader, device)
+    val_loss = val(model, test_loader, device, criterion=criterion)
     print(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {train_loss / len(train_loader)} val_loss: {val_loss}")
 
-torch.save(model.state_dict(), "/home/emir/Desktop/dev/datasets/nft_rarity_dataset/weights/run_01.pt")
+torch.save(model.state_dict(), "/home/emir/Desktop/dev/datasets/nft_rarity_dataset/weights/run_01_clsf.pt")
