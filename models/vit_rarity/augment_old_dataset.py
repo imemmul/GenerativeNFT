@@ -17,10 +17,10 @@ transform = iaa.Sequential([
     iaa.Multiply((0.5, 1.5), per_channel=0.5),  # random brightnessg
 ])
 
-class_labels = pd.read_csv('/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/old_dataset_rarity.csv')
+class_labels = pd.read_csv('/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/old_dataset_rarity.csv')
 classes = class_labels.copy()
-old_data_dir = '/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset_old/NFT_DATASET_MERGED/train'
-augment_data_dir = '/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset_old/NFT_DATASET_AUGMENTED'
+old_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_MERGED/train'
+augment_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_AUGMENTED'
 #print(class_labels.columns)
 #print(len(class_labels))
 
@@ -55,10 +55,30 @@ for i in range(len(classes)):
     if start_index <= i <= end_index:
 
         collection_name = 'shin_sengoku'
-        img_name = img_name.replace("'", "_")
-        img_name = img_name.replace("Å«", "ū")
+        if "'" in img_name:
+            img_name = img_name.replace("'", "_")
+        elif "ÅŒ" in img_name:
+            img_name = img_name.replace("ÅŒ", "Ō")
+        elif "Å«" in img_name and "ÅŌ" not in img_name:
+            img_name = img_name.replace("Å«", "ū")
+        
+        special_cases = {
+            "Genâ€™ichi Takemi": "Gen’ichi Takemi",
+            "Genâ€™ichi Aragaki": "Gen’ichi Aragaki",
+            "Ken_yÅ« Yanagimachi": "Ken_yū Yanagimachi",
+            "Ken_yÅ« Uesaka": "Ken_yū Uesaka",
+            "Ken_yÅ« Horihata": "Ken_yū Horihata",
+            "Ken_yÅ« Mitsumori": "Ken_yū Mitsumori"
+        }
+        if img_name in special_cases:
+            img_name = special_cases[img_name]
+            img_dir = os.path.join(old_data_dir,collection_name,img_name)
+            #print(img_name)
+        
         img_name_with_extension = img_name + ".png"
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
+        #print(f"Image dir shin_sengoku: {img_dir}")
+
         #print(img_dir)
         #img = cv2.imread(img_dir)
         #cv2.imshow(img)
@@ -142,12 +162,13 @@ for i in range(len(classes)):
         else:
             suffix = "th"
             img_number_with_suffix = f"the {img_number}{suffix}"
-            print(img_number_with_suffix)
+            #print(img_number_with_suffix)
             img_name_with_extension = f"Degen Fat Cat {img_number_with_suffix}.png"
             #print(img_name_with_extension)
             img_dir = os.path.join(old_data_dir, collection_name, img_name_with_extension)
             if os.path.isfile(img_dir):
-                print(f"fixed")
+                continue
+                #print(f"fixed")
                 
         if os.path.isfile(img_dir):
             pass
