@@ -20,7 +20,7 @@ transform = iaa.Sequential([
 class_labels = pd.read_csv('/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/old_dataset_rarity.csv')
 classes_copy = class_labels.copy()
 old_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_MERGED/train'
-augment_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_AUGMENTED'
+augment_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_AUGMENTED/train'
 #print(class_labels.columns)
 #print(len(class_labels))
 #print(f"Columns of csv: {classes.columns}")
@@ -322,25 +322,33 @@ for i in range(len(class_labels)):
                 classes_copy.drop(columns=['Unnamed: 0'])
                 classes_copy.drop(columns=['Unnamed: 0.1'])
                 #print(img_dir)
-
-                #img = cv2.imread(img_dir)
-                img = Image.open(img_dir)
-                if img.mode == 'RGBA':
-                    img = img.convert('RGB')
-                transformed = transform(images=[np.array(img)])
-                #transformed = transform(images=[img])
-
-                #for transformed_img in transformed:
-                    #Image.fromarray(transformed_img).show()
                 
-                #for i, image in enumerate(transformed):
-                #    cv2.imshow(f"Augmented Image {i+1}", image)
-                #    cv2.waitKey(1000)
-                #    cv2.destroyWindow(f"Augmented Image {i+1}")
+                try:
+                    #img = cv2.imread(img_dir)
+                    img = Image.open(img_dir)
+                    img = img.convert('RGB')
+                    transformed = transform.augment_image(np.array(img))
+                    print(f"transformed: {img_dir}")
+                    #transformed = transform(images=[img])
 
-                cv2.imwrite(filename=os.path.join(augment_data_dir, augmented_name), img=np.array(transformed))
+                    #for transformed_img in transformed:
+                        #Image.fromarray(transformed_img).show()
+                    
+                    #for i, image in enumerate(transformed):
+                    #    cv2.imshow(f"Augmented Image {i+1}", image)
+                    #    cv2.waitKey(1000)
+                    #    cv2.destroyWindow(f"Augmented Image {i+1}")
+
+                    #cv2.imwrite(filename=os.path.join(augment_data_dir, augmented_name), img=np.array(transformed))
+
+                    os.makedirs(os.path.join(augment_data_dir, collection_name), exist_ok=True)
+                    Image.fromarray(transformed).save(os.path.join(augment_data_dir, collection_name, augmented_name))
+                
+                except AssertionError as e:
+                    print(f"Error in image: {img_dir}")
+                    print(e)
         
         else:
-            pass
+            print(f"not rare, :{img_dir.split('/')[-1]}")
 
 classes_copy.to_csv("./old_dataset_labels_augmented.csv")  
