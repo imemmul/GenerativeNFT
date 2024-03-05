@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import numpy as np
-from torchvision import transforms
 import cv2
 from imgaug import augmenters as iaa
 from PIL import Image
@@ -18,11 +17,10 @@ transform = iaa.Sequential([
     iaa.Multiply((0.5, 1.5), per_channel=0.5),  # random brightnessg
 ])
 
-class_labels = pd.read_csv('/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/labels.csv')
-classes = pd.read_csv('/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/old_dataset_rarity.csv')
-classes_copy = class_labels.copy()
-old_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_MERGED/train'
-augment_data_dir = 'old_dataset_augmented'
+class_labels = pd.read_csv('/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/old_dataset_rarity.csv')
+classes = class_labels.copy()
+old_data_dir = '/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset_old/NFT_DATASET_MERGED/train'
+augment_data_dir = '/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset_old/NFT_DATASET_AUGMENTED'
 #print(class_labels.columns)
 #print(len(class_labels))
 
@@ -47,16 +45,15 @@ end_onChainName = class_labels.loc[end_index, 'onChainName']
 
 
 
-warnings.filterwarnings("ignore", category=UserWarning)
-warnings.simplefilter(action='ignore', category=UserWarning)
-warnings.filterwarnings("ignore", message=".*loadsave.cpp.*")
-
-
+# warnings.filterwarnings("ignore", category=UserWarning)
+# warnings.simplefilter(action='ignore', category=UserWarning)
+# warnings.filterwarnings("ignore", message=".*loadsave.cpp.*")
 for i in range(len(classes)):
     img_name = classes['onChainName'][i]
     
     # Remain
     if start_index <= i <= end_index:
+
         collection_name = 'shin_sengoku'
         img_name = img_name.replace("'", "_")
         img_name = img_name.replace("Å«", "ū")
@@ -81,22 +78,17 @@ for i in range(len(classes)):
         #     "Ken'ichi Hiyama": "Ken_ichi Hiyama"
 
         # }
-        try:
-            img = cv2.imread(img_dir)
-            if img is None:
-                print(f"Failed to open image: {img_dir}")
-        except Exception as e:
-            print(f"Error opening image: {e}")
-
-        print(img_dir)
-
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
 
     elif 'Degen Fat Cat' in img_name:
         collection_name = 'degenfatcats'
-        img_number = img_name.split('#')[-1].strip() ['Degen Fat Cat', '2598']
-        #print(f"Image number creation: {img_number}")
+        img_number = img_name.split('#')[-1].strip()
+        # print(f"Image number creation degenfatcat: {img_number}")
         img_number = ''.join(filter(str.isdigit, img_number))
-        #print("Numeric part of the image name:", img_number)
+        # print("Numeric part of the image name:", img_number)
 
         special_cases = {
             "17213": "Degen Fat Cat the 17213th.png",
@@ -139,28 +131,28 @@ for i in range(len(classes)):
                 img_number_with_suffix = f"the {img_number}{suffix}"
                 img_name_with_extension = f"Degen Fat Cat {img_number_with_suffix}.png"
                 img_dir = os.path.join(old_data_dir, collection_name, img_name_with_extension)
-        #print(img_number_with_suffix)
-        #img_name_with_extension = f"Degen Fat Cat {img_number_with_suffix}.png"
-        #img_name_with_extension = img_name + ".png"
-        
-        with warnings.catch_warnings(): #FIXME
-            warnings.filterwarnings("ignore", category=UserWarning)
-            try:
-                img = cv2.imread(img_dir)
-                if img is None:
-                    #print("ı am here")
-                    suffix = "th"
-                    img_number_with_suffix = f"the {img_number}{suffix}"
-                    #print(img_number_with_suffix)
-                    img_name_with_extension = f"Degen Fat Cat {img_number_with_suffix}.png"
-                    #print(img_name_with_extension)
-                    img_dir = os.path.join(old_data_dir, collection_name, img_name_with_extension)
-                    #print(img_dir) 
-            except Exception as e:
-                #print(f"Error opening image: {e}")
-                pass
-        
-        #print(img_dir)
+        # print(img_number_with_suffix)
+        img_name_with_extension = f"Degen Fat Cat {img_number_with_suffix}.png"
+        img_name_with_extension = img_name + ".png"
+        # print(img_name_with_extension)
+        # print(img_dir)
+        noluyo = []
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            suffix = "th"
+            img_number_with_suffix = f"the {img_number}{suffix}"
+            print(img_number_with_suffix)
+            img_name_with_extension = f"Degen Fat Cat {img_number_with_suffix}.png"
+            #print(img_name_with_extension)
+            img_dir = os.path.join(old_data_dir, collection_name, img_name_with_extension)
+            if os.path.isfile(img_dir):
+                print(f"fixed")
+                
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
 
     # Image names match with csv file names
     elif 'Degen Ape' in img_name:
@@ -168,15 +160,10 @@ for i in range(len(classes)):
         img_name_with_extension = img_name + ".png"
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
-        #img = cv2.imread(img_dir)
-
-        try:
-            img = cv2.imread(img_dir)
-            if img is None:
-                raise FileNotFoundError(f"Failed to open image: {img_dir}")
-        except Exception as e:
-            print(f"Error opening image: {e}")
-            continue
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
 
     
     # Image names match with csv file names
@@ -185,7 +172,10 @@ for i in range(len(classes)):
         img_name_with_extension = img_name + ".png"
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
-        #img = cv2.imread(img_dir)
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
     
      # Image names match with csv file names
     elif 'SMB' in img_name:
@@ -193,7 +183,10 @@ for i in range(len(classes)):
         img_name_with_extension = img_name + ".png"
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
-        #img = cv2.imread(img_dir)
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
     
     # Image names match with csv file names
     elif 'Fox' in img_name:
@@ -202,6 +195,10 @@ for i in range(len(classes)):
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
         #img = cv2.imread(img_dir)
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
     
     # Image names match with csv file names
     elif 'Okay Bear' in img_name:
@@ -210,6 +207,10 @@ for i in range(len(classes)):
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
         #img = cv2.imread(img_dir)
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
     
     # Image names match with csv file names
     elif 'Shadowy Super Coder' in img_name:
@@ -218,6 +219,10 @@ for i in range(len(classes)):
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
         #img = cv2.imread(img_dir)
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
     
     # Image names match with csv file names
     elif 'Remnants' in img_name:
@@ -225,6 +230,10 @@ for i in range(len(classes)):
         img_name_with_extension = img_name + ".png"
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
     
     # Image names match with csv file names
     elif 'Cet' in img_name:
@@ -232,6 +241,11 @@ for i in range(len(classes)):
         img_name_with_extension = img_name + ".png"
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
+            
 
     # Image names match with csv file names 
     elif 'y00t' in img_name:
@@ -239,6 +253,10 @@ for i in range(len(classes)):
         img_name_with_extension = img_name + ".png"
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         #print(img_dir)
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
 
     # Image names and csv file names are not same 
     elif 'Smyth' in img_name or 'Blocksmith' in img_name:
@@ -247,12 +265,8 @@ for i in range(len(classes)):
             img_name = img_name.replace('Blocksmith Labs', 'Smyth')
         img_name_with_extension = img_name + ".png"
         img_dir = os.path.join(old_data_dir, collection_name, img_name_with_extension)
-
-        try:
-            img = cv2.imread(img_dir)
-            if img is None:
-                print(f"Failed to open image: {img_dir}")
-        except Exception as e:
-            print(f"Error opening image: {e}")
-        
+        if os.path.isfile(img_dir):
+            pass
+        else:
+            print(f"not correct: {img_dir}")
         #print(f"Blocksmith: {img_dir}")
