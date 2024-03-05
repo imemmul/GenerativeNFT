@@ -18,11 +18,16 @@ transform = iaa.Sequential([
 ])
 
 class_labels = pd.read_csv('/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/old_dataset_rarity.csv')
-classes = class_labels.copy()
+classes_copy = class_labels.copy()
 old_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_MERGED/train'
 augment_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_AUGMENTED'
 #print(class_labels.columns)
 #print(len(class_labels))
+#print(f"Columns of csv: {classes.columns}")
+class_labels.drop(columns='Unnamed: 0.1', inplace=True)
+#print(f"Classes of csv after drop 1: {class_labels.columns}")
+class_labels.drop(columns='Unnamed: 0', inplace=True)
+#print(f"Classes of csv after drop 2: {class_labels.columns}")
 
 collection_names = []
 
@@ -48,8 +53,8 @@ end_onChainName = class_labels.loc[end_index, 'onChainName']
 # warnings.filterwarnings("ignore", category=UserWarning)
 # warnings.simplefilter(action='ignore', category=UserWarning)
 # warnings.filterwarnings("ignore", message=".*loadsave.cpp.*")
-for i in range(len(classes)):
-    img_name = classes['onChainName'][i]
+for i in range(len(class_labels)):
+    img_name = class_labels['onChainName'][i]
     
     # Remain
     if start_index <= i <= end_index:
@@ -291,3 +296,51 @@ for i in range(len(classes)):
         else:
             print(f"not correct: {img_dir}")
         #print(f"Blocksmith: {img_dir}")
+    
+    cls = class_labels['cls_label'][i]
+    #print(f"Classes for index{i}: {cls}")
+    img_dir_count = 0
+    if img_dir.endswith('png'):
+        img_dir_count += 1
+        if cls == 1:
+            for _ in range(20): # 20 new augmentation for one rare image 20*150 = 3000 normalization for collection
+                augmented_name = class_labels['onChainName'][i] + f"_augmented_{_}.png"
+                #print(f"augmented name: {augmented_name}")
+                augmented_folder_name = os.path.join(old_data_dir,augmented_name)
+                #print(f"Augmented folder name: {augmented_folder_name}")
+
+                #print(f"Label: {class_labels['label'][i]}")
+                #print(f"Dict: {class_labels['dict'][i]} ")
+                #print(f"Rank values: {class_labels['rank_values_merarity'][i]}")
+                #print(f"Class Labels: {class_labels['cls_label'][i]}")
+
+                new_row = {'onChainName': augmented_name, 'label':class_labels['label'][i], 'dict':class_labels['dict'][i], 'rank_values':class_labels['rank_values_merarity'][i], 'cls_label':class_labels['cls_label'][i]}
+                #print(f"New row for csv file with index {i}: {new_row}")
+
+                # Adding a new created row to already existing dataframe 
+                classes_copy.loc[len(classes_copy.index)] = new_row
+                classes_copy.drop(columns=['Unnamed: 0'])
+                classes_copy.drop(columns=['Unnamed: 0.1'])
+                #print(img_dir)
+
+                #img = cv2.imread(img_dir)
+                img = Image.open(img_dir)
+                if img.mode == 'RGBA':
+                    img = img.convert('RGB')
+                transformed = transform(images=[np.array(img)])
+                #transformed = transform(images=[img])
+
+                #for transformed_img in transformed:
+                    #Image.fromarray(transformed_img).show()
+                
+                #for i, image in enumerate(transformed):
+                #    cv2.imshow(f"Augmented Image {i+1}", image)
+                #    cv2.waitKey(1000)
+                #    cv2.destroyWindow(f"Augmented Image {i+1}")
+
+                cv2.imwrite(filename=os.path.join(augment_data_dir, augmented_name), img=np.array(transformed))
+        
+        else:
+            pass
+
+classes_copy.to_csv("./old_dataset_labels_augmented.csv")  
