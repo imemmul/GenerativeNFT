@@ -42,6 +42,7 @@ merged_final.sort_values(by=['onChainName'], inplace=True)
 
 old_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_MERGED/train'
 old_data_merged_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_old/NFT_DATASET_AUGMENTED/train'
+new_data_dir = '/Users/beyzakaya/Desktop/bk/Akademik/Senior Design Project/rarity/nft_dataset_new/new_collection'
 for i in range(len(merged_final)):
     img_name = merged_final['onChainName'][i]
     #print(f"Image name inside merged df: {img_name}")
@@ -204,28 +205,111 @@ for i in range(len(merged_final)):
         if not os.path.exists(img_dir):
             print(f"Image directory does not exist: {img_dir}")
         
-    elif ('Female Remnants' or 'The Remnants' in img_name) and 'augmented' not in img_name:
+    elif 'Female Remnants' in img_name and 'augmented' not in img_name:
+        collection_name = 'the_remnants_'
+        img_name_with_extension = img_name + '.png'
+        img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
+        if not os.path.exists(img_dir):
+            print(f"Image directory does not exist: {img_dir}")
+    
+    elif 'Female Remnants' in img_name and 'augmented' in img_name:
+        collection_name = 'the_remnants_'
+        img_dir = os.path.join(old_data_merged_dir,collection_name,img_name)
+        if not os.path.exists(img_dir):
+            print(f"Image directory does not exist: {img_dir}")
+    
+    
+    elif 'The Remnants' in img_name and 'augmented' not in img_name:
         collection_name = 'the_remnants_'
         img_name_with_extension = img_name + '.png'
         img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
         if not os.path.exists(img_dir):
             print(f"Image directory does not exist: {img_dir}")
 
-
-
-                
-
-
-            
+    elif 'The Remnants' in img_name and 'augmented' in img_name:
+        collection_name = 'the_remnants_'
+        img_dir = os.path.join(old_data_merged_dir,collection_name,img_name)
+        if not os.path.exists(img_dir):
+            print(f"Image directory does not exist: {img_dir}")
     
-
-
-
-
-
-
-
-
+    elif 'y00t' in img_name and 'augmented' not in img_name:
+        collection_name = 'y00ts'
+        img_name_with_extension = img_name + '.png'
+        img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
+        if not os.path.exists(img_dir):
+            print(f"Image directory does not exist: {img_dir}")
+    
+    elif 'y00t' in img_name and 'augmented' in img_name:
+        collection_name = 'y00ts'
+        img_dir = os.path.join(old_data_merged_dir,collection_name,img_name)
+        if not os.path.exists(img_dir):
+            print(f"Image directory does not exist: {img_dir}")
+    
+    #elif ('azragames' or 'azuki' or 'bastard-gan' or 'beanzofficial' or 'genesis-creepz' or 'genuine-undead' or 'kanpai-pandas' or 'killabears' or 'lazy-lions' or 'ninja-squad-official' or 'parallel-avatars' or 'pixelmongen1' or 'pudgypenguins' or 'sappy-seals' or 'thewarlords') in img_name:
+    elif any(keyword in img_name for keyword in ['azragames', 'azuki', 'bastard-gan', 'beanzofficial', 'genesis-creepz', 'genuine-undead', 'kanpai-pandas', 'killabears', 'lazy-lions', 'ninja-squad-official', 'parallel-avatars', 'pixelmongen1', 'pudgypenguins', 'sappy-seals', 'thewarlords']):
+        print(f"new dataset")
+        img_dir = os.path.join(new_data_dir,img_name)
+        if not os.path.exists(img_dir):
+            print(f"Image directory does not exist: {img_dir}")
+    
+    else:
+        #print(f"else block")
+        for index, row in merged_final.iterrows():
+            #print(f"shin sengoku")
+            img_name = merged_final['onChainName'][index]
+            if 'shin_sengoku' in str(row.values) and 'augmented' not in img_name:
+                #print(f"Image name for shin_sengoku: {img_name}")
+                collection_name = 'shin_sengoku'
+                special_cases = {
+                    "Genâ€™ichi Takemi": "Gen’ichi Takemi",
+                    "Genâ€™ichi Aragaki": "Gen’ichi Aragaki",
+                    "Ken_yÅ« Yanagimachi": "Ken_yū Yanagimachi",
+                    "Ken_yÅ« Uesaka": "Ken_yū Uesaka",
+                    "Ken_yÅ« Horihata": "Ken_yū Horihata",
+                    "Ken_yÅ« Mitsumori": "Ken_yū Mitsumori"
+                }
+                if img_name in special_cases:
+                    img_name = special_cases[img_name]
+                    img_name_with_extension = img_name + '.png'
+                    img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
+                    if not os.path.exists(img_dir):
+                        # if "'" in img_name:
+                        #     img_name = img_name.replace("'", "_")
+                        # elif "ÅŒ" in img_name:
+                        #     img_name = img_name.replace("ÅŒ", "Ō")
+                        # elif "Å«" in img_name and "ÅŌ" not in img_name:
+                        #     img_name = img_name.replace("Å«", "ū")
+                        # img_name_with_extension = img_name + ".png"
+                        # img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
+                        
+                        #if not os.path.exists(img_dir):
+                        print(f"Image directory does not exist: {img_dir}")
+                
+            elif 'shin_sengoku' in str(row.values) and 'augmented' in img_name: 
+                collection_name = 'shin_sengoku'
+                special_cases = {
+                    "Genâ€™ichi Takemi": "Gen’ichi Takemi",
+                    "Genâ€™ichi Aragaki": "Gen’ichi Aragaki",
+                    "Ken_yÅ« Yanagimachi": "Ken_yū Yanagimachi",
+                    "Ken_yÅ« Uesaka": "Ken_yū Uesaka",
+                    "Ken_yÅ« Horihata": "Ken_yū Horihata",
+                    "Ken_yÅ« Mitsumori": "Ken_yū Mitsumori"
+                }
+                if img_name in special_cases:
+                    img_name = special_cases[img_name]
+                    img_name_with_extension = img_name + '.png'
+                    img_dir = os.path.join(old_data_dir,collection_name,img_name_with_extension)
+                    if not os.path.exists(img_dir):
+                        # if "'" in img_name:
+                        #     img_name = img_name.replace("'", "_")
+                        # elif "ÅŒ" in img_name:
+                        #     img_name = img_name.replace("ÅŒ", "Ō")
+                        # elif "Å«" in img_name and "ÅŌ" not in img_name:
+                        #     img_name = img_name.replace("Å«", "ū")
+                        # img_dir = os.path.join(old_data_dir,collection_name,img_name)
+                        #if not os.path.exists(img_dir):
+                        print(f"Image directory does not exist: {img_dir}")
+                    
 # duplicates = merged_df_common_columns[merged_df_common_columns.duplicated('onChainName', keep=False)]
 # non_augmented_mask = ~merged_df_common_columns['onChainName'].str.contains('augmented', case=False)
 # count_duplicate = 0
