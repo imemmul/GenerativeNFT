@@ -92,9 +92,30 @@ def get_prompts(download_dir, image_dir):
     df_copy.to_csv("./metadata_collection_new_augmented_2.csv")
                 
                 
-
-def augment_old_collection(csv_dir):
-    pass
+# below is for old collection blabla
+def prompts_old_collection(labels_dir, metadata_dir):
+    df_labels = pd.read_csv(labels_dir)
+    df_metadata = pd.read_csv(metadata_dir)
+    aug_indices = df_labels.index[df_labels['data_name'].str.contains("augment")].tolist()
+    df_metadata['prompt_w_col'] = None
+    for index in aug_indices:
+        match = df_labels.iloc[index]['data_name'].split('_')[0] +".png"
+        matched_indices = df_metadata.index[df_metadata['file_name'].str.contains(match)].tolist()
+        augmented_file_name = df_labels.iloc[index]['data_name'] + ".png"
+        split_file_name = df_metadata.iloc[matched_indices]['file_name'].str.split("/").tolist()[0]
+        split_file_name.insert(3, augmented_file_name)
+        concat_file_name = '/'.join(split_file_name[:4])
+        print(concat_file_name)
+        prompt = df_metadata.iloc[matched_indices[0]]['text']
+        print(prompt)
+        col_name = df_metadata.iloc[matched_indices]['file_name'].str.split("/").tolist()[0][2]
+        df_metadata.loc[matched_indices, 'prompt_w_col'] = prompt + ", " + col_name
+        augmented_prompt_w_col = augment_prompts(prompt, isCollection=False)
+        print(augmented_prompt_w_col)
+        new_row = pd.DataFrame({'file_name': concat_file_name, 'text': None, 'prompt_w_col': augmented_prompt_w_col}, index=[0])
+        df_metadata = pd.concat([df_metadata, new_row], ignore_index=True)
+    df_metadata.to_csv("new_old_metadata.csv")
+    
         
 
 
@@ -296,6 +317,9 @@ def main():
         get_rarity("/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/rarity_dataset")
     elif args.prompts:
         get_prompts("/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset", image_dir="/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset/NFT_DATASET_MERGED/new_collection")
+    else:
+        prompts_old_collection(labels_dir="/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset/labels_augmented_old_collection.csv", 
+                               metadata_dir="/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset/NFT_DATASET_MERGED/metadata_collection.csv")
 
 if __name__ == "__main__":
     main()
