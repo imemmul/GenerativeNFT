@@ -22,16 +22,17 @@ def main():
     for index in range(len(df)):
         try:
             file_name = df["file_name"][index]
-            print(file_name)
+            data_name = file_name.replace("/train", ".")[:-4].split("/")[-1]
+            print(data_name)
             json_dir = file_name.replace("/train", ".")[:-3] + "json"
             json_dir = os.path.join(args.folder_dir, json_dir)
             data = load_json(json_dir)
-            metadata_csv.append({"onChainName": data[0]['mintObject']['onChainName'], "rarity": data[0]['mintObject']['rarity']})
+            metadata_csv.append({"data_name": data_name, "rarity": data[0]['mintObject']['rarity']})
         except KeyError:
             print(f"KEY ERROR !!!!!!!!")
         
-    csv_file_path = 'metadata_old_dataset_rarity_new.csv'
-    fields = ['onChainName', 'rarity']
+    csv_file_path = 'metadata_old_dataset_rarity_new_159.csv'
+    fields = ['data_name', 'rarity']
     with open(csv_file_path, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fields)
         writer.writeheader()

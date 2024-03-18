@@ -1,11 +1,103 @@
 import argparse
+import time
 import os
 import json
+import pandas as pd 
 import requests
 from urllib.parse import urlparse
 import csv
 from PIL import Image
 from io import BytesIO
+import nltk
+import random
+
+def attribute_parser(traits, col_name=None):
+    prompt = ""
+    for i in traits[::-1]:
+        value = i['value']
+        trait_type = i['trait_type']
+        if value != "None" and trait_type != "None":
+            prompt += str(value) + " " + str(trait_type) + ","
+        else:
+            pass
+    if col_name:
+        prompt += col_name
+    return prompt
+
+def augment_prompts(prompt, randomdrop_p=0.3, isCollection=False):
+    if isCollection:
+        words = prompt.split(",")
+        col_name = words[-1]
+        words.remove(col_name)
+        num_words_to_drop = int(len(words) * randomdrop_p)
+        words_to_keep = random.sample(words, len(words) - num_words_to_drop)
+        words_to_keep.append(col_name)
+        return ', '.join(words_to_keep)
+    else:
+        words = prompt.split(",")
+        num_words_to_drop = int(len(words) * randomdrop_p)
+        words_to_keep = random.sample(words, len(words) - num_words_to_drop)
+        return ', '.join(words_to_keep)
+
+def get_prompts(download_dir, image_dir):
+    valid_list = ["azuki",
+                "sappy-seals",
+                "killabears",
+                "lazy-lions",
+                "genuine-undead",
+                "genesis-creepz",
+                "bastard-gan-punks-v2",
+                "pudgypenguins",
+                "beanzofficial",
+                "ninja-squad-official",
+                "azragames-thehopeful",
+                "thewarlords",
+                "parallel-avatars",
+                "pixelmongen1",
+                "kanpai-pandas"]
+    
+    count = 0
+    df = pd.read_csv("/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset/labels_augmented.csv")
+    df_copy = df.copy()
+    df_copy.drop(columns=['Unnamed: 0', 'Unnamed: 0.1'], inplace=True)
+    print(df_copy.columns)
+    df_copy['prompt_w0_col'] = ""
+    df_copy['prompt_col'] = ""
+    for j in valid_list:
+        json_dir = os.path.join(download_dir, j+".json")
+        if os.path.isfile(json_dir):
+            data = load_json(json_dir)
+            for i in data[j]:
+                root = j + "_" + i['identifier']
+                image_name = j + "_" + i['identifier'] +".png"
+                if os.path.isfile(os.path.join(image_dir, image_name)):
+                    attributes = i['traits']
+                    count += 1
+                    prompt_w0_col = attribute_parser(attributes, col_name=None)
+                    prompt_col = attribute_parser(attributes, col_name=j)
+                    if df_copy['data_name'].str.contains(root).any():
+                        aug_indices = df_copy.index[df_copy['data_name'].str.contains(root) & df_copy['data_name'].str.contains("augment")].tolist()
+                        org_indices = df_copy.index[df_copy['data_name'].str.contains(root) & ~(df_copy['data_name'].str.contains("augment"))].tolist()
+                        df_copy.loc[org_indices, 'prompt_w0_col'] = prompt_w0_col
+                        df_copy.loc[org_indices, 'prompt_col'] = prompt_col
+                        for index in aug_indices:
+                            prompt_w0_col_augmented = augment_prompts(prompt_w0_col, isCollection=False)
+                            prompt_col_augmented = augment_prompts(prompt_col, isCollection=True)
+                            df_copy.loc[index, 'prompt_w0_col'] = prompt_w0_col_augmented
+                            df_copy.loc[index, 'prompt_col'] = prompt_col_augmented
+                    else:
+                        new_row = pd.DataFrame({'index': [len(df_copy) + 1], 'data_name': [image_name], 'label':[None], 'dict': [None], 'rank_values': [None], 'cls': [None], 'prompt_w0_col': [prompt_w0_col], 'prompt_col': [prompt_col]})
+                        df_copy = pd.concat([df_copy, new_row], ignore_index=True)
+                    
+    df_copy.to_csv("./metadata_collection_new_augmented_2.csv")
+                
+                
+
+def augment_old_collection(csv_dir):
+    pass
+        
+
+
 
 def get_rarity(download_dir):
     valid_list = ["azuki",
@@ -188,6 +280,7 @@ def parseargs():
     parser.add_argument("--download-text", action="store_true", help="test or download texts")
     parser.add_argument("--sync-dataset", action="store_true", help="syncing images and text files")
     parser.add_argument("--rarity", action="store_true")
+    parser.add_argument("--prompts", action="store_true")
     args = parser.parse_args()
     if args.verbose:
             print("Verbose mode is enabled")
@@ -201,6 +294,8 @@ def main():
         download_text(args)
     elif args.rarity:
         get_rarity("/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/rarity_dataset")
+    elif args.prompts:
+        get_prompts("/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset", image_dir="/Users/emirulurak/Desktop/dev/ozu/openseadata/dataset/nft_dataset/NFT_DATASET_MERGED/new_collection")
 
 if __name__ == "__main__":
     main()
