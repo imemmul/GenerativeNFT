@@ -23,11 +23,11 @@ class CustomDataset(Dataset):
     
     def __getitem__(self,idx):
         img_name = self.label_df.iloc[idx]['data_name']
-        print(f"Image name: {img_name}")
+        #print(f"Image name: {img_name}")
         img_name = img_name.replace('./new_collection/', '')
-        print(f"Image name after removing first part: {img_name}")
+        #print(f"Image name after removing first part: {img_name}")
         img_path = os.path.join(self.image_dir, img_name)
-        print(f"Image path: {img_path}")
+        #print(f"Image path: {img_path}")
         image = Image.open(img_path).convert('RGB')
         label = self.label_df.iloc[idx]['cls']
         #print(f"Len of csv file: {len(self.label_df)}")
@@ -35,7 +35,7 @@ class CustomDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         
-        return image, label
+        return image, label,img_name
 
 # 1 for rare 
 # 0 for not rare
@@ -53,7 +53,7 @@ class ViTModelEvaluator:
         total_predictions = 0
 
         with torch.no_grad():
-            for images, labels in dataloader:
+            for images, labels, img_names in dataloader:
                 images = images.to(self.device)
                 labels = labels.to(self.device)
 
@@ -66,9 +66,9 @@ class ViTModelEvaluator:
                         correct_predictions += 1
 
                     if prediction >= 0.5:
-                        print(f"Image is predicted as RARE with confidence: {prediction.item()}, Actual label: {label}")
+                        print(f"Image {img_names} is predicted as RARE with confidence: {prediction.item()}, Actual label: {label}")
                     else:
-                        print(f"Image is predicted as NOT RARE with confidence: {1 - prediction.item()}, Actual label: {label}")
+                        print(f"Image {img_names} is predicted as NOT RARE with confidence: {1 - prediction.item()}, Actual label: {label}")
 
         accuracy = correct_predictions / total_predictions
         print(f"Total predictions: {total_predictions}, Correct predictions: {correct_predictions}, Accuracy: {accuracy}")
