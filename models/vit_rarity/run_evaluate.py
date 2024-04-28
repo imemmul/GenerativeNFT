@@ -12,7 +12,7 @@ def argument_parse():
 
 def main(image_dir, label_dir, vit_model_weights_path):
     custom_dataset = CustomDataset(image_dir, label_dir)
-    dataloader = DataLoader(custom_dataset, batch_size=8, shuffle=False)
+    dataloader = DataLoader(custom_dataset, batch_size=8)
     vit_evaluator = ViTModelEvaluator(vit_model_weights_path)
     vit_evaluator.evaluate_dataset(dataloader)
 
