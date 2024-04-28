@@ -11,18 +11,26 @@ class CustomDataset(Dataset):
     def __init__(self,image_dir,label_dir, transform=None):
         self.image_dir = image_dir
         self.label_df = pd.read_csv(label_dir)
-        self.transform = transform
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize((224, 224))
+            
+        ])
+    
     
     def __len__(self):
         return len(self.label_df)
     
     def __getitem__(self,idx):
-        #img_name = self.label_df['data_name']
-        img_name = os.path.join(self.image_dir, self.label_df.iloc[idx]['data_name'])
+        img_name = self.label_df.iloc[idx]['data_name']
         print(f"Image name: {img_name}")
-        image = Image.open(img_name).convert('RGB')
-        label = self.label_df[idx]['cls']
-        print(f"Len of csv file: {len(self.label_df)}")
+        img_name = img_name.replace('./new_collection/', '')
+        print(f"Image name after removing first part: {img_name}")
+        img_path = os.path.join(self.image_dir, img_name)
+        print(f"Image path: {img_path}")
+        image = Image.open(img_path).convert('RGB')
+        label = self.label_df.iloc[idx]['cls']
+        #print(f"Len of csv file: {len(self.label_df)}")
 
         if self.transform:
             image = self.transform(image)
@@ -64,4 +72,3 @@ class ViTModelEvaluator:
 
         accuracy = correct_predictions / total_predictions
         print(f"Total predictions: {total_predictions}, Correct predictions: {correct_predictions}, Accuracy: {accuracy}")
-
