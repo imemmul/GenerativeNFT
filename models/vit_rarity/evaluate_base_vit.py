@@ -17,7 +17,8 @@ class CustomDataset(Dataset):
         return len(self.label_df)
     
     def __getitem__(self,idx):
-        img_name = self.label_df['data_name']
+        #img_name = self.label_df['data_name']
+        img_name = os.path.join(self.image_dir, self.label_df.iloc[idx]['data_name'])
         print(f"Image name: {img_name}")
         image = Image.open(img_name).convert('RGB')
         label = self.label_df[idx]['cls']
