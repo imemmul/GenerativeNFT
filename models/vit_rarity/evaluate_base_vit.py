@@ -6,6 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from transformers import ViTForImageClassification
 import torch.nn as nn
+from sklearn.metrics import f1_score, confusion_matrix
 
 class CustomDataset(Dataset):
     def __init__(self,image_dir,label_dir, transform=None):
@@ -14,6 +15,7 @@ class CustomDataset(Dataset):
         self.transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize((224, 224))
+            #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             
         ])
     
@@ -49,8 +51,8 @@ class ViTModelEvaluator:
         self.vit_model.eval()
 
     def evaluate_dataset(self, dataloader):
-        correct_predictions = 0
-        total_predictions = 0
+        true_labels = []
+        predicted_probs = [] # for conf matrix
 
         with torch.no_grad():
             for images, labels, img_names in dataloader:
@@ -60,15 +62,25 @@ class ViTModelEvaluator:
                 outputs = self.vit_model(images)
                 predictions = torch.sigmoid(outputs.logits)
 
-                for prediction, label in zip(predictions, labels):
-                    total_predictions += 1
-                    if (prediction >= 0.5 and label == 1) or (prediction < 0.5 and label == 0):
-                        correct_predictions += 1
+                true_labels = labels # came from csv file 
+                predicted_probs = predictions # predictions based on sigmoid with ViT model 
 
-                    if prediction >= 0.5:
-                        print(f"Image {img_names} is predicted as RARE with confidence: {prediction.item()}, Actual label: {label}")
+                for prediction, label, img_name in zip(predictions, labels, img_names):
+                    if(prediction >= 0.5):
+                        print(f"Image {img_name} is predicted as RARE with confidence: {prediction.item()}, Actual label: {label}")
                     else:
-                        print(f"Image {img_names} is predicted as NOT RARE with confidence: {1 - prediction.item()}, Actual label: {label}")
+                        print(f"Image {img_name} is predicted as NOT RARE with confidence: {prediction.item()}, Actual label: {label}")
 
-        accuracy = correct_predictions / total_predictions
-        print(f"Total predictions: {total_predictions}, Correct predictions: {correct_predictions}, Accuracy: {accuracy}")
+        true_labels = [1 if label == 1 else 0 for label in true_labels]
+        predicted_labels = [1 if prob >= 0.5 else 0 for prob in predicted_probs]
+
+        f1_score = f1_score(true_labels, predicted_labels)
+        confusion_mat = confusion_matrix(true_labels,predicted_labels)
+        accuracy = sum([1 if true == pred else 0 for true, pred in zip(true_labels, predicted_labels)]) / len(true_labels)
+
+        print(f"Accuracy: {accuracy}")
+        print(f"F1 Score: {f1_score}")
+        print(f"Confusion Matrix:\n{confusion_mat}")
+
+
+
