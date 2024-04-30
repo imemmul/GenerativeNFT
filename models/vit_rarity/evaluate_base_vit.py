@@ -25,6 +25,10 @@ class CustomDataset(Dataset):
     
     def __getitem__(self,idx):
         img_name = self.label_df.iloc[idx]['data_name']
+
+        # Skip images with "augmented" in data_name column
+        if "augmented" in img_name:
+            return None, None, None
         #print(f"Image name: {img_name}")
         img_name = img_name.replace('./new_collection/', '')
         #print(f"Image name after removing first part: {img_name}")
