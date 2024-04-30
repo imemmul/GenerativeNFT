@@ -9,7 +9,7 @@ import torch.nn as nn
 from sklearn.metrics import f1_score, confusion_matrix, accuracy_score
 
 class CustomDataset(Dataset):
-    def __init__(self,image_dir,label_dir, transform=None):
+    def __init__(self,image_dir,label_dir, transform=None, subset_size=None):
         self.image_dir = image_dir
         self.label_df = pd.read_csv(label_dir)
         self.transform = transforms.Compose([
@@ -18,6 +18,10 @@ class CustomDataset(Dataset):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             
         ])
+        self.subset_size = subset_size
+        
+        if self.subset_size is not None:
+            self.label_df = self.label_df[:self.subset_size]
     
     
     def __len__(self):
