@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from transformers import ViTForImageClassification
 import torch.nn as nn
-from sklearn.metrics import f1_score, confusion_matrix
+from sklearn.metrics import f1_score, confusion_matrix, accuracy_score
 
 class CustomDataset(Dataset):
     def __init__(self,image_dir,label_dir, transform=None):
@@ -14,8 +14,8 @@ class CustomDataset(Dataset):
         self.label_df = pd.read_csv(label_dir)
         self.transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Resize((224, 224))
-            #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Resize((224, 224)),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             
         ])
     
@@ -66,8 +66,8 @@ class ViTModelEvaluator:
                 outputs = self.vit_model(images)
                 predictions = torch.sigmoid(outputs.logits)
 
-                true_labels = labels # came from csv file 
-                predicted_probs = predictions # predictions based on sigmoid with ViT model 
+                true_labels.extend(labels.cpu().numpy()) # came from csv file 
+                predicted_probs.extend(predictions.cpu().numpy()) # predictions based on sigmoid with ViT model 
 
                 for prediction, label, img_name in zip(predictions, labels, img_names):
                     if(prediction >= 0.5):
@@ -75,12 +75,16 @@ class ViTModelEvaluator:
                     else:
                         print(f"Image {img_name} is predicted as NOT RARE with confidence: {prediction.item()}, Actual label: {label}")
 
-        true_labels = [1 if label == 1 else 0 for label in true_labels]
-        predicted_labels = [1 if prob >= 0.5 else 0 for prob in predicted_probs]
+        #true_labels = [1 if label == 1 else 0 for label in true_labels]
+        #predicted_labels = [1 if prob >= 0.5 else 0 for prob in predicted_probs]
+        true_labels = np.array(true_labels)
+        predicted_probs = np.array(predicted_probs)
+        predicted_labels = (predicted_probs >= 0.5).astype(int)
 
         f1_score = f1_score(true_labels, predicted_labels)
         confusion_mat = confusion_matrix(true_labels,predicted_labels)
-        accuracy = sum([1 if true == pred else 0 for true, pred in zip(true_labels, predicted_labels)]) / len(true_labels)
+        #accuracy = sum([1 if true == pred else 0 for true, pred in zip(true_labels, predicted_labels)]) / len(true_labels)
+        accuracy = accuracy_score(true_labels, predicted_labels)
 
         print(f"Accuracy: {accuracy}")
         print(f"F1 Score: {f1_score}")
