@@ -14,10 +14,9 @@ def argument_parse():
     return parser.parse_args()  
 
 def main(image_dir, label_dir, vit_model_weights_path, subset_size=None):
-    custom_dataset = CustomDataset(image_dir, label_dir)
+    custom_dataset = CustomDataset(image_dir, label_dir, subset_size=subset_size)
     if subset_size is not None:
-        indices = random.sample(range(len(custom_dataset)), min(subset_size, len(custom_dataset)))
-        custom_dataset = torch.utils.data.Subset(custom_dataset, indices)
+        custom_dataset = custom_dataset[:subset_size]
     dataloader = DataLoader(custom_dataset, batch_size=8)
     vit_evaluator = ViTModelEvaluator(vit_model_weights_path)
     vit_evaluator.evaluate_dataset(dataloader)
