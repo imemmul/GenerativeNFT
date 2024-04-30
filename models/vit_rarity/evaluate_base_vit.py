@@ -7,6 +7,7 @@ from torchvision import transforms
 from transformers import ViTForImageClassification
 import torch.nn as nn
 from sklearn.metrics import f1_score, confusion_matrix, accuracy_score
+import random
 
 class CustomDataset(Dataset):
     def __init__(self,image_dir,label_dir, transform=None, subset_size=None):
@@ -18,16 +19,17 @@ class CustomDataset(Dataset):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             
         ])
-        self.subset_size = subset_size
-        
         if self.subset_size is not None:
-            self.label_df = self.label_df[:self.subset_size]
+            self.indices = random.sample(range(len(self.label_df)), min(self.subset_size, len(self.label_df)))
+        else:
+            self.indices = range(len(self.label_df))
     
     
     def __len__(self):
         return len(self.label_df)
     
     def __getitem__(self,idx):
+        idx = self.indices[idx]
         img_name = self.label_df.iloc[idx]['data_name']
 
         # Skip images with "augmented" in data_name column
