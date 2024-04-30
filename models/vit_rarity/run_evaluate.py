@@ -10,15 +10,15 @@ def argument_parse():
     parser.add_argument("--image_dir", type=str, help="Path to directory containing images")
     parser.add_argument("--label_dir", type=str, help="Path to CSV file containing labels")
     parser.add_argument("--vit_model_weights_path", type=str, help="Path to ViT model weights file")
-    parser.add_argument("--subset_size", type=int, default=None, help="Number of samples for the subset (default: None, which means using the entire dataset)")
+    #parser.add_argument("--subset_size", type=int, default=None, help="Number of samples for the subset (default: None, which means using the entire dataset)")
     return parser.parse_args()  
 
 def main(image_dir, label_dir, vit_model_weights_path, subset_size=None):
-    custom_dataset = CustomDataset(image_dir, label_dir, subset_size=subset_size)
+    custom_dataset = CustomDataset(image_dir, label_dir)
     dataloader = DataLoader(custom_dataset, batch_size=8)
     vit_evaluator = ViTModelEvaluator(vit_model_weights_path)
     vit_evaluator.evaluate_dataset(dataloader)
 
 if __name__ == "__main__":
     args = argument_parse()
-    main(args.image_dir, args.label_dir, args.vit_model_weights_path, args.subset_size)
+    main(args.image_dir, args.label_dir, args.vit_model_weights_path)
