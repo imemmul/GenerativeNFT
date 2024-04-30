@@ -8,9 +8,12 @@ from transformers import ViTForImageClassification
 import torch.nn as nn
 from sklearn.metrics import f1_score, confusion_matrix, accuracy_score
 import random
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class CustomDataset(Dataset):
-    def __init__(self, image_dir, label_dir, transform=None, subset_size=None):
+    def __init__(self, image_dir, label_dir, transform=None):
         self.image_dir = image_dir
         self.label_df = pd.read_csv(label_dir)
         self.transform = transforms.Compose([
@@ -20,19 +23,24 @@ class CustomDataset(Dataset):
             
         ])
         
-        if subset_size is not None:
-            random.seed(42)
-            subset_indices = random.sample(range(len(self.label_df)), min(subset_size, len(self.label_df)))
-            self.label_df = self.label_df.iloc[subset_indices]
+        # if subset_size is not None:
+        #     random.seed(42)
+        #     subset_indices = random.sample(range(len(self.label_df)), min(subset_size, len(self.label_df)))
+        #     self.label_df = self.label_df.iloc[subset_indices]
         
-        self.label_df.reset_index(drop=True, inplace=True)
+        # self.label_df.reset_index(drop=True, inplace=True)
         
         self.preprocess()
-
+    
     def preprocess(self):
         self.label_df = self.label_df[~self.label_df['data_name'].str.contains('augmented')]
         self.label_df.reset_index(drop=True, inplace=True)
         self.label_df['data_name'] = self.label_df['data_name'].apply(lambda x: os.path.join(self.image_dir, x.replace('./new_collection/', '')))
+
+    # def preprocess(self):
+    #     self.label_df = self.label_df[~self.label_df['data_name'].str.contains('augmented')]
+    #     self.label_df.reset_index(drop=True, inplace=True)
+    #     self.label_df['data_name'] = self.label_df['data_name'].apply(lambda x: os.path.join(self.image_dir, x.replace('./new_collection/', '')))
         
     def __len__(self):
         return len(self.label_df)
@@ -58,6 +66,16 @@ class ViTModelEvaluator:
         self.vit_model.load_state_dict(torch.load(vit_model_weights_path, map_location=self.device))
         self.vit_model.to(self.device)
         self.vit_model.eval()
+    
+    # def plot_confusion_matrix(self, confusion_mat):
+    #     figure = plt.figure(figsize=(16, 12))
+    #     sns.heatmap(confusion_mat,fmt='d', cmap='Blues')
+    #     plt.tight_layout()
+    #     plt.tight_layout()
+    #     plt.xlabel('Predicted Label')
+    #     plt.ylabel('True Label')
+    #     plt.title('Confusion Matrix')
+    #     plt.show()
 
     def evaluate_dataset(self, dataloader):
         true_labels = []
@@ -86,14 +104,15 @@ class ViTModelEvaluator:
         predicted_probs = np.array(predicted_probs)
         predicted_labels = (predicted_probs >= 0.5).astype(int)
 
-        f1_score = f1_score(true_labels, predicted_labels)
+        f1 = f1_score(true_labels, predicted_labels)
         confusion_mat = confusion_matrix(true_labels,predicted_labels)
         #accuracy = sum([1 if true == pred else 0 for true, pred in zip(true_labels, predicted_labels)]) / len(true_labels)
         accuracy = accuracy_score(true_labels, predicted_labels)
 
         print(f"Accuracy: {accuracy}")
-        print(f"F1 Score: {f1_score}")
+        print(f"F1 Score: {f1}")
         print(f"Confusion Matrix:\n{confusion_mat}")
+        self.plot_confusion_matrix(confusion_mat)
 
 
 
