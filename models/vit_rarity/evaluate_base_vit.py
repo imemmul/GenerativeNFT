@@ -19,6 +19,7 @@ class CustomDataset(Dataset):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             
         ])
+        self.subset_size = subset_size
         if self.subset_size is not None:
             self.indices = random.sample(range(len(self.label_df)), min(self.subset_size, len(self.label_df)))
         else:
