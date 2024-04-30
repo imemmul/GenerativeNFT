@@ -10,7 +10,7 @@ from sklearn.metrics import f1_score, confusion_matrix, accuracy_score
 import random
 
 class CustomDataset(Dataset):
-    def __init__(self,image_dir,label_dir, transform=None, subset_size=None):
+    def __init__(self, image_dir, label_dir, transform=None, subset_size=None):
         self.image_dir = image_dir
         self.label_df = pd.read_csv(label_dir)
         self.transform = transforms.Compose([
@@ -19,36 +19,34 @@ class CustomDataset(Dataset):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             
         ])
-        self.subset_size = subset_size
-        if self.subset_size is not None:
-            self.indices = random.sample(range(len(self.label_df)), min(self.subset_size, len(self.label_df)))
-        else:
-            self.indices = range(len(self.label_df))
-    
-    
+        
+        if subset_size is not None:
+            random.seed(42)
+            subset_indices = random.sample(range(len(self.label_df)), min(subset_size, len(self.label_df)))
+            self.label_df = self.label_df.iloc[subset_indices]
+        
+        self.label_df.reset_index(drop=True, inplace=True)
+        
+        self.preprocess()
+
+    def preprocess(self):
+        self.label_df = self.label_df[~self.label_df['data_name'].str.contains('augmented')]
+        self.label_df.reset_index(drop=True, inplace=True)
+        self.label_df['data_name'] = self.label_df['data_name'].apply(lambda x: os.path.join(self.image_dir, x.replace('./new_collection/', '')))
+        
     def __len__(self):
         return len(self.label_df)
     
-    def __getitem__(self,idx):
-        idx = self.indices[idx]
+    def __getitem__(self, idx):
         img_name = self.label_df.iloc[idx]['data_name']
-
-        # Skip images with "augmented" in data_name column
-        if "augmented" in img_name:
-            return None, None, None
-        #print(f"Image name: {img_name}")
-        img_name = img_name.replace('./new_collection/', '')
-        #print(f"Image name after removing first part: {img_name}")
-        img_path = os.path.join(self.image_dir, img_name)
-        #print(f"Image path: {img_path}")
-        image = Image.open(img_path).convert('RGB')
         label = self.label_df.iloc[idx]['cls']
-        #print(f"Len of csv file: {len(self.label_df)}")
-
+        
+        image = Image.open(img_name).convert('RGB')
+        
         if self.transform:
             image = self.transform(image)
         
-        return image, label,img_name
+        return image, label, img_name
 
 # 1 for rare 
 # 0 for not rare
