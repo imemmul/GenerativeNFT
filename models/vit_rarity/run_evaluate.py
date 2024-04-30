@@ -15,8 +15,6 @@ def argument_parse():
 
 def main(image_dir, label_dir, vit_model_weights_path, subset_size=None):
     custom_dataset = CustomDataset(image_dir, label_dir, subset_size=subset_size)
-    if subset_size is not None:
-        custom_dataset = custom_dataset[:subset_size]
     dataloader = DataLoader(custom_dataset, batch_size=8)
     vit_evaluator = ViTModelEvaluator(vit_model_weights_path)
     vit_evaluator.evaluate_dataset(dataloader)
