@@ -1,5 +1,6 @@
 import argparse
 from evaluate_base_vit import CustomDataset, ViTModelEvaluator
+import torch 
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import random
