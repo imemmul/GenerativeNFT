@@ -30,12 +30,16 @@ test_transform = transforms.Compose([
 ])
 
 class RarityDataset(Dataset):
-    def __init__(self, label_dir_old, label_dir_new, image_dir_old, image_dir_new, image_dir_augmented,transform):
+    def __init__(self, label_dir_old, label_dir_new, image_dir_old, image_dir_new, file_path_dir_old,file_name_column,transform):
         self.images_dir_old = image_dir_old
         self.images_dir_new = image_dir_new
         #self.images_dir_augmented = image_dir_augmented
         self.labels_old = pd.read_csv(label_dir_old)
         self.labels_new = pd.read_csv(label_dir_new)
+        self.file_path_dir_old = pd.read_csv(file_path_dir_old)
+        self.image_paths = self.file_path_dir_old[file_name_column].tolist()
+        self.file_path_dir_old[file_name_column] = '/content/drive/MyDrive' + self.file_path_dir_old[file_name_column].astype(str)
+        self.file_path_dir_old = self.file_path_dir_old[~self.file_path_dir_old[file_name_column].str.contains('shin_sengoku')] #shin_sengoku removed from csv for file names for img paths (old collection)
         self.transform = transform
 
     def __len__(self):
@@ -56,7 +60,9 @@ class RarityDataset(Dataset):
                 return img, self.labels_new.iloc['index'].__class__
             
             else:
-                img_dir =  os.path.join(self.images_dir_old, self.labels_old.iloc[index].data_name + ".png")
+                img_name = self.image_paths[index]
+                img_path = os.path.join(self.image_dir, img_name)
+                img_path = '/content/drive/MyDrive/output_captioning/NFT_DATASET_MERGED' + img_path
                 img = np.array(Image.open(img_dir).convert('RGB'))
                 if self.transform:
                     img = self.transform(img)
@@ -72,6 +78,8 @@ def _arg_parse():
     args.add_argument("--split_ratio", type=float)
     args.add_argument("--label_dir_old", type=str)
     args.add_argument("--label_dir_new", type=str)
+    args.add_argument("--file_path_dir_old", type=str)
+    args.add_argument("--file_name_column", type=str)
     args.add_argument("--num_epochs", type=int)
     args.add_argument("--train", action="store_true")
     args.add_argument("--checkpoint", type=str)
