@@ -13,43 +13,45 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 class CustomDataset(Dataset):
-    def __init__(self, image_dir, label_dir, transform=None):
+    def __init__(self, image_csv_path, label_csv_path, image_dir, image_file_col, label_col, transform=None):
+        image_df = pd.read_csv(image_csv_path)
+        label_df = pd.read_csv(label_csv_path)
+        self.image_paths = image_df[image_file_col].tolist()
+        self.labels = label_df[label_col].tolist()
         self.image_dir = image_dir
-        self.label_df = pd.read_csv(label_dir)
         self.transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize((224, 224)),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             
         ])
-        
-        # if subset_size is not None:
-        #     random.seed(42)
-        #     subset_indices = random.sample(range(len(self.label_df)), min(subset_size, len(self.label_df)))
-        #     self.label_df = self.label_df.iloc[subset_indices]
-        
-        # self.label_df.reset_index(drop=True, inplace=True)
-        
-        self.preprocess()
+        #self.preprocess()
+    
     
     def preprocess(self):
         self.label_df = self.label_df[~self.label_df['data_name'].str.contains('augmented')]
         self.label_df.reset_index(drop=True, inplace=True)
         self.label_df['data_name'] = self.label_df['data_name'].apply(lambda x: os.path.join(self.image_dir, x.replace('./new_collection/', '')))
-
+    
     # def preprocess(self):
     #     self.label_df = self.label_df[~self.label_df['data_name'].str.contains('augmented')]
     #     self.label_df.reset_index(drop=True, inplace=True)
     #     self.label_df['data_name'] = self.label_df['data_name'].apply(lambda x: os.path.join(self.image_dir, x.replace('./new_collection/', '')))
         
     def __len__(self):
-        return len(self.label_df)
+        return len(self.image_paths)
     
     def __getitem__(self, idx):
-        img_name = self.label_df.iloc[idx]['data_name']
-        label = self.label_df.iloc[idx]['cls']
+        #img_name = self.label_df.iloc[idx]['data_name']
+        #label = self.label_df.iloc[idx]['cls']
         
-        image = Image.open(img_name).convert('RGB')
+        #image = Image.open(img_name).convert('RGB')
+
+        img_name = self.image_paths[idx]
+        img_path = os.path.join(self.image_dir, img_name)
+        img_path = os.path.join('/content/drive/MyDrive', img_path)
+        label = self.labels[idx]
+        image = Image.open(img_path).convert('RGB')
         
         if self.transform:
             image = self.transform(image)
@@ -112,7 +114,7 @@ class ViTModelEvaluator:
         print(f"Accuracy: {accuracy}")
         print(f"F1 Score: {f1}")
         print(f"Confusion Matrix:\n{confusion_mat}")
-        self.plot_confusion_matrix(confusion_mat)
+        #self.plot_confusion_matrix(confusion_mat)
 
 
 
