@@ -54,16 +54,16 @@ class RarityDataset(Dataset):
             if index >= len(self.labels_old):
                 index = index - len(self.labels_old)
                 img_dir = os.path.join(self.images_dir_new, self.labels_new.iloc[index].data_name)
-                img_dir = '/content/drive/Othercomputers/My MacBook Air/NFT_DATASET_MERGED_forViT_augmented/new_collection'
+                #img_dir = '/content/drive/Othercomputers/My MacBook Air/NFT_DATASET_MERGED_forViT_augmented/new_collection' + img_dir
                 img = np.array(Image.open(img_dir).convert('RGB'))
                 if self.transform:
                     img = self.transform(img)
-                return img, self.labels_new.iloc['index'].__class__
+                return img, self.labels_new.iloc[index].cls
             
             else:
                 img_name = self.image_paths[index]
                 img_dir = os.path.join(self.images_dir_old, img_name)
-                img_dir = 'content/drive/Othercomputers/My MacBook Air/NFT_DATASET_MERGED_forViT_augmented' + img_path
+                img_dir = '/content/drive/Othercomputers/My MacBook Air/NFT_DATASET_MERGED_forViT_augmented' + img_dir
                 img = np.array(Image.open(img_dir).convert('RGB'))
                 if self.transform:
                     img = self.transform(img)
