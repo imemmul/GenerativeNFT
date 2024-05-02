@@ -38,7 +38,7 @@ class RarityDataset(Dataset):
         self.labels_new = pd.read_csv(label_dir_new)
         self.file_path_dir_old = pd.read_csv(file_path_dir_old)
         self.image_paths = self.file_path_dir_old[file_name_column].tolist()
-        self.file_path_dir_old[file_name_column] = '/content/drive/MyDrive' + self.file_path_dir_old[file_name_column].astype(str)
+        #self.file_path_dir_old[file_name_column] = '/content/drive/MyDrive' + self.file_path_dir_old[file_name_column].astype(str)
         self.file_path_dir_old = self.file_path_dir_old[~self.file_path_dir_old[file_name_column].str.contains('shin_sengoku')] #shin_sengoku removed from csv for file names for img paths (old collection)
         self.transform = transform
 
@@ -62,8 +62,8 @@ class RarityDataset(Dataset):
             
             else:
                 img_name = self.image_paths[index]
-                img_path = os.path.join(self.image_dir, img_name)
-                img_path = 'content/drive/Othercomputers/My MacBook Air/NFT_DATASET_MERGED_forViT_augmented' + img_path
+                img_dir = os.path.join(self.images_dir_old, img_name)
+                img_dir = 'content/drive/Othercomputers/My MacBook Air/NFT_DATASET_MERGED_forViT_augmented' + img_path
                 img = np.array(Image.open(img_dir).convert('RGB'))
                 if self.transform:
                     img = self.transform(img)
@@ -105,12 +105,14 @@ def val(model, test_loader, device, criterion):
 
 def _train():
     args = _arg_parse()
-    if args.train():
+    if args.train:
         dataset = RarityDataset(label_dir_old=args.label_dir_old,label_dir_new=args.label_dir_new,
-                                image_dir_old=args.image_dir_old, image_dir_new=args.image_dir_new, transform=transform)
+                                image_dir_old=args.images_dir_old, image_dir_new=args.images_dir_new, 
+                                file_path_dir_old=args.file_path_dir_old, file_name_column=args.file_name_column, transform=transform)
     else:
          dataset = RarityDataset(label_dir_old=args.label_dir_old, label_dir_new=args.label_dir_new,
-                                      image_dir_old=args.images_dir_old, image_dir_new=args.images_dir_new, transform=test_transform)
+                                      image_dir_old=args.images_dir_old, image_dir_new=args.images_dir_new,
+                                       file_path_dir_old=args.file_path_dir_old, file_name_column=args.file_name_column, transform=test_transform)
 
     train_dataset, val_dataset = random_split(dataset, [int(len(dataset)*args.split_ratio), int(len(dataset) - int(len(dataset)*args.split_ratio))])
     print(len(train_dataset))
