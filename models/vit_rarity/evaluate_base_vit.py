@@ -17,6 +17,10 @@ class CustomDataset(Dataset):
         image_df = pd.read_csv(image_csv_path)
         label_df = pd.read_csv(label_csv_path)
         self.image_paths = image_df[image_file_col].tolist()
+        image_df[image_file_col] = '/content/drive/MyDrive' + image_df[image_file_col].astype(str)
+        #print(image_df[image_file_col])
+        image_df = image_df[~image_df[image_file_col].str.contains('shin_sengoku')]
+        image_df = image_df[~image_df[image_file_col].str.contains('augmented')]
         self.labels = label_df[label_col].tolist()
         self.image_dir = image_dir
         self.transform = transforms.Compose([
@@ -25,14 +29,12 @@ class CustomDataset(Dataset):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             
         ])
-        #self.preprocess()
+        self.preprocess()
     
     
     def preprocess(self):
-        self.label_df = self.label_df[~self.label_df['data_name'].str.contains('augmented')]
-        self.label_df.reset_index(drop=True, inplace=True)
-        self.label_df['data_name'] = self.label_df['data_name'].apply(lambda x: os.path.join(self.image_dir, x.replace('./new_collection/', '')))
-    
+        self.image_paths = [path for path in self.image_paths if "augmented" not in path]
+        
     # def preprocess(self):
     #     self.label_df = self.label_df[~self.label_df['data_name'].str.contains('augmented')]
     #     self.label_df.reset_index(drop=True, inplace=True)
@@ -49,9 +51,10 @@ class CustomDataset(Dataset):
 
         img_name = self.image_paths[idx]
         img_path = os.path.join(self.image_dir, img_name)
-        img_path = os.path.join('/content/drive/MyDrive', img_path)
-        label = self.labels[idx]
+        img_path = '/content/drive/MyDrive/output_captioning/NFT_DATASET_MERGED' + img_path
         image = Image.open(img_path).convert('RGB')
+        
+        label = self.labels[idx]
         
         if self.transform:
             image = self.transform(image)
@@ -115,6 +118,3 @@ class ViTModelEvaluator:
         print(f"F1 Score: {f1}")
         print(f"Confusion Matrix:\n{confusion_mat}")
         #self.plot_confusion_matrix(confusion_mat)
-
-
-
